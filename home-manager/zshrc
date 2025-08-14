@@ -1,0 +1,67 @@
+export ZSH="$HOME/.oh-my-zsh"
+
+ZSH_THEME=""
+
+plugins=(git golang)
+
+source $ZSH/oh-my-zsh.sh
+fpath+=($HOME/.zsh/pure)
+autoload -U promptinit; promptinit
+prompt pure
+
+zstyle :prompt:pure:git:dirty color '#FAFAB2'
+zstyle :prompt:pure:git:branch color '#66FFA4'
+zstyle :prompt:pure:user color '#99FFCC'
+zstyle :prompt:pure:host color '#99FFFF'
+zstyle :prompt:pure:path color '#E5CCFF'
+zstyle :prompt:pure:prompt:success color '#FFFFFF'
+zstyle :prompt:pure:prompt:error color '#FF0000'
+zstyle :prompt:pure:virtualenv color '#FFFF99'
+zstyle :prompt:pure:continuation color '#FFFF99'
+
+############ User ENV configuration ##############
+
+. "$HOME/.cargo/env"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+alias cat=bat
+# export MANPATH="/usr/local/man:$MANPATH"
+source <(kubectl completion zsh)
+source <(infractl completion zsh)
+source <(helm completion zsh)
+
+export SCRIPTS_DIR="$HOME/.scripts"
+export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+export EDITOR=nvim
+export GOPATH="$HOME/go"
+export GOBIN="$GOPATH/bin"
+
+# pnpm
+export PNPM_HOME="/home/jtrahan/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C $GOBIN/mc mc
+
+eval $(ssh-agent -s)
+
+alias dj="cd ~/projects/dj_store && source .venv/bin/activate"
+
+# custum shell utility functions
+source "$SCRIPTS_DIR/tarfuncs.sh"
+source "$SCRIPTS_DIR/ssh_utils.sh"
+
+# bun completions
+[ -s "/home/jtrahan/.bun/_bun" ] && source "/home/jtrahan/.bun/_bun"
+
+# bun
+
+#alias tree="tree -I \'node_modules|dist|build|.venv\'"
