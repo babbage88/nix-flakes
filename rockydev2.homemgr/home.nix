@@ -210,6 +210,10 @@
       # Scripts
       source "$HOME/.scripts/kube_funcs.sh"
       source "$HOME/.scripts/ssh_utils.sh"
+      
+      # run ssh-agent in background
+      eval "$(ssh-agent -s)"
+
     '';
 
     shellAliases = {
@@ -218,6 +222,7 @@
     };
 };
 
+services.ssh-agent.enable = true;
 programs.zsh.syntaxHighlighting.enable = true;
 
   # Let Home Manager install and manage itself.
