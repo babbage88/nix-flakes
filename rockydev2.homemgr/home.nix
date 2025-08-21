@@ -67,9 +67,7 @@
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
+    ### ssh helper functions ###
     ".scripts/ssh_utils.sh".text = ''
       # Function to start an interactive shell in the specified pod
       purgessh() {
@@ -114,7 +112,24 @@
       alias get-knownhost=getknownhost
     '';
 
-    # # You can also set the file content immediately.
+    ### nix home-manager helper funcs - install config from local git repo ###
+    ".scripts/install_latest_nixhm.sh".text = ''
+      #!/usr/bin/env sh
+      pull_build_nixhm () {
+        NIXSRCDIR="$HOME/projects/nix-flakes/rockydev2.homemgr"
+        HMDIR="$HOME/.config/home-manager"
+        NIXHOMECFG="$NIXSRCDIR/home.nix"
+        export FLAKEKEY="$HMDIR/#jtrahan"
+        printf "copying %s to %s...\n" "$NIXHOMECFG" "$HMDIR"
+        cp $NIXHOMECFG $HMDIR/home.nix
+        printf "copying flake files to %s...\n" "$HMDIR"
+        cp $NIXSRCDIR/flake.* $HMDIR/
+        printf "rebuild nix hm config: %s...\n" "$FLAKEKEY"
+        home-manager switch --flake $FLAKEKEY -b backup
+        }
+    '';
+
+    ### kubectl helper funcs ###
     ".scripts/kube_funcs.sh".text = ''
       #!/usr/bin/env sh
       # Function to start an interactive shell in the specified pod
@@ -209,9 +224,10 @@
       source <(helm completion zsh)
       source <(infractl completion zsh)
     
-      # Scripts
+      # Source custom functions
       source "$HOME/.scripts/kube_funcs.sh"
       source "$HOME/.scripts/ssh_utils.sh"
+      source "$HOME/.scripts/install_latest_nixhm.sh"
       
       # run ssh-agent in background
       eval "$(ssh-agent -s)"
@@ -222,6 +238,7 @@
       k = "kubectl";
       cat = "bat";
       nsr = "home-manager switch --flake ~/.config/home-manager/#jtrahan -b backup";
+      install-nhmg = "pull_build_nixhm";
     };
 };
 
