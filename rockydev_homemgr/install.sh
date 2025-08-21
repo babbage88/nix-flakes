@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-NIXSRCDIR="$HOME/projects/nix-flakes/rockydev2.homemgr"
+NIXSRCDIR="$HOME/projects/nix-flakes/rockydev_homemgr"
 HMDIR="$HOME/.config/home-manager"
 NIXHOMECFG="$NIXSRCDIR/home.nix"
 export FLAKEKEY="$HMDIR/#jtrahan"

@@ -116,7 +116,7 @@
     ".scripts/install_latest_nixhm.sh".text = ''
       #!/usr/bin/env sh
       pull_build_nixhm () {
-        NIXSRCDIR="$HOME/projects/nix-flakes/rockydev2.homemgr"
+        NIXSRCDIR="$HOME/projects/nix-flakes/rockydev_homemgr"
         HMDIR="$HOME/.config/home-manager"
         NIXHOMECFG="$NIXSRCDIR/home.nix"
         export FLAKEKEY="$HMDIR/#jtrahan"
@@ -205,6 +205,12 @@
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$BUN_INSTALL/bin:$PATH"
       fpath+=($HOME/.zsh/pure)
+      setopt autocd
+      zstyle ':completion::complete:cd:*' accept-exact '(*/|)..'
+      zstyle ':completion:*' special-dirs true
+      autoload -Uz compinit
+      compinit
+
       autoload -U promptinit; promptinit
       prompt pure
       
