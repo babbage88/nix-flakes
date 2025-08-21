@@ -236,6 +236,7 @@
 
     shellAliases = {
       k = "kubectl";
+      ls = "ls -lah --color=auto";
       cat = "bat";
       nsr = "home-manager switch --flake ~/.config/home-manager/#jtrahan -b backup";
       install-nhmg = "pull_build_nixhm";
