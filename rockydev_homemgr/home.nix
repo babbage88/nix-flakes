@@ -131,7 +131,6 @@
 
     # Function to start an interactive shell in the specified pod
     ".scripts/helper_funcs/podterm.sh".text = ''
-    #!/usr/bin/env sh
     podterm() {
       local pod_name=$1
       if [[ -z "$pod_name" ]]; then
@@ -174,7 +173,6 @@
 
     ### Function to clean up or list terminating pods ###
     ".scripts/helper_funcs/kube_cleanup_terminating.sh".text = ''
-      #!/usr/bin/env sh
       kube_cleanup_terminating_pods() {
           usage() {
               cat <<EOF
@@ -259,6 +257,31 @@
               done
           fi
       }
+
+      # zsh completion for kube_cleanup_terminating_pods
+      _kube_cleanup_terminating_pods() {
+        local -a opts
+        opts=(
+          '-n[Specify namespace]:namespace:_kube_namespaces'
+          '--namespace[Specify namespace]:namespace:_kube_namespaces'
+          '--all-namespaces[Search across all namespaces]'
+          '--show-only[Only show terminating pods]'
+          '-h[Show help]'
+          '--help[Show help]'
+        )
+
+        _arguments -s $opts
+      }
+
+    # Helper function to fetch namespaces dynamically
+    _kube_namespaces() {
+      local -a namespaces
+      namespaces=($(kubectl get ns --no-headers -o custom-columns=:metadata.name 2>/dev/null))
+      _values 'namespaces' $namespaces
+    }
+
+    # Register the completion
+    compdef _kube_cleanup_terminating_pods kube_cleanup_terminating_pods
     '';
   };
 
