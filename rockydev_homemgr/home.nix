@@ -126,39 +126,40 @@
         cp $NIXSRCDIR/flake.* $HMDIR/
         printf "rebuild nix hm config: %s...\n" "$FLAKEKEY"
         home-manager switch --flake $FLAKEKEY -b backup
-        }
+      }
     '';
 
-    ### kubectl helper funcs ###
-    ".scripts/kube_funcs.sh".text = ''
-      #!/usr/bin/env sh
-      # Function to start an interactive shell in the specified pod
-      podterm() {
-        local pod_name=$1
-        if [[ -z "$pod_name" ]]; then
-          echo "Please specify the pod name."
-          return 1
-        fi
-        kubectl exec --stdin --tty "$pod_name" -- /bin/sh
-      }
+    # Function to start an interactive shell in the specified pod
+    ".scripts/helper_funcs/podterm.sh".text = ''
+    #!/usr/bin/env sh
+    podterm() {
+      local pod_name=$1
+      if [[ -z "$pod_name" ]]; then
+        echo "Please specify the pod name."
+        return 1
+      fi
+      kubectl exec --stdin --tty "$pod_name" -- /bin/sh
+    }
 
-      # Auto-completion for pod names
-      _podterm_completion() {
-        local pods=($(kubectl get pods --no-headers -o custom-columns=:metadata.name 2>/dev/null))
-        _describe 'pods' pods
-      }
+    # Auto-completion for pod names
+    _podterm_completion() {
+      local pods=($(kubectl get pods --no-headers -o custom-columns=:metadata.name 2>/dev/null))
+      _describe 'pods' pods
+    }
 
-      # Register the auto-completion for the podterm function
-      compdef _podterm_completion podterm
+    # Register the auto-completion for the podterm function
+    compdef _podterm_completion podterm
+    '';
 
-      # Function to list pods on a specific node
-    nodepods() {
-        local node_name=$1
-        if [[ -z "$node_name" ]]; then
-          echo "Please specify the node name."
-          return 1
-        fi
-        kubectl get pods --field-selector spec.nodeName="$node_name" --all-namespaces -o wide
+    # Function to list pods on a specific node
+    ".scripts/helper_funcs/nodepods.sh".text = ''
+      nodepods() {
+          local node_name=$1
+          if [[ -z "$node_name" ]]; then
+            echo "Please specify the node name."
+            return 1
+          fi
+          kubectl get pods --field-selector spec.nodeName="$node_name" --all-namespaces -o wide
       }
 
       # Auto-completion for node names
@@ -169,6 +170,95 @@
 
       # Register the auto-completion for the nodepods function
       compdef _nodepods_completion nodepods
+    '';
+
+    ### Function to clean up or list terminating pods ###
+    ".scripts/helper_funcs/kube_cleanup_terminating.sh".text = ''
+      #!/usr/bin/env sh
+      kube_cleanup_terminating_pods() {
+          usage() {
+              cat <<EOF
+      Usage: kube_cleanup_terminating_pods [OPTIONS]
+
+      Find and delete pods stuck in "Terminating" state.
+
+      Options:
+        -n, --namespace NS     Specify the namespace to search in
+            --all-namespaces   Search across all namespaces
+            --show-only        Only list terminating pods (do not delete)
+        -h, --help             Show this help message
+      EOF
+          }
+
+          namespace=""
+          all_namespaces=""
+          show_only=""
+
+          while [ $# -gt 0 ]; do
+              case "$1" in
+                  -n|--namespace)
+                      shift
+                      [ -z "$1" ] && { echo "Error: missing namespace name" >&2; usage; return 1; }
+                      namespace="--namespace=$1"
+                      ;;
+                  --all-namespaces)
+                      all_namespaces="--all-namespaces"
+                      ;;
+                  --show-only)
+                      show_only=1
+                      ;;
+                  -h|--help)
+                      usage
+                      return 0
+                      ;;
+                  -*)
+                      echo "Unknown option: $1" >&2
+                      usage
+                      return 1
+                      ;;
+                  *)
+                      break
+                      ;;
+              esac
+              shift
+          done
+
+          if [ -n "$namespace" ] && [ -n "$all_namespaces" ]; then
+              echo "Error: Cannot use both --namespace and --all-namespaces" >&2
+              usage
+              return 1
+          fi
+
+          if [ -n "$all_namespaces" ]; then
+              pods=$(kubectl get pods --all-namespaces | grep Terminating | awk '{print $2 "|" $1}')
+              if [ -z "$pods" ]; then
+                  echo "No terminating pods found"
+                  return 0
+              fi
+              echo "$pods" | while IFS="|" read -r pod ns; do
+                  if [ -n "$show_only" ]; then
+                      echo "Terminating pod: $pod (namespace: $ns)"
+                  else
+                      echo "Deleting pod: $pod (namespace: $ns)"
+                      kubectl delete pod "$pod" --namespace="$ns" --grace-period=0 --force
+                  fi
+              done
+          else
+              pods=$(kubectl get pods $namespace | grep Terminating | awk '{print $1}')
+              if [ -z "$pods" ]; then
+                  echo "No terminating pods found"
+                  return 0
+              fi
+              for p in $pods; do
+                  if [ -n "$show_only" ]; then
+                      echo "Terminating pod: $p $namespace"
+                  else
+                      echo "Deleting pod: $p $namespace"
+                      kubectl delete pod "$p" $namespace --grace-period=0 --force
+                  fi
+              done
+          fi
+      }
     '';
   };
 
@@ -231,7 +321,9 @@
       source <(infractl completion zsh)
     
       # Source custom functions
-      source "$HOME/.scripts/kube_funcs.sh"
+      source "$HOME/.scripts/helper_funcs/nodepods.sh"
+      source "$HOME/.scripts/helper_funcs/podterm.sh"
+      source "$HOME/.scripts/helper_funcs/kube_cleanup_terminating.sh"
       source "$HOME/.scripts/ssh_utils.sh"
       source "$HOME/.scripts/install_latest_nixhm.sh"
       
