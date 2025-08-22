@@ -67,6 +67,253 @@
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
+    ### nslookup_k8s - helper function to performing nslookup for kubernetes service ###
+  ".scripts/helper_funcs/nslookup_k8s.sh".text = ''
+  nslookup_k8s() {
+    usage() {
+      cat <<'EOF'
+  Usage: nslookup_k8s [OPTIONS]
+
+  Run an nslookup inside a Kubernetes pod to test DNS/service resolution.
+
+  Options:
+    -p, --pod POD           Pod name to exec into (default: debug-nslookup)
+    -c, --container NAME    Container name within the pod (default: debug-nslookup)
+    -t, --target HOSTNAME   Hostname or pod/service name to resolve (required)
+    -n, --namespace NS      Kubernetes namespace (default: current kubectl context namespace)
+    -h, --help              Show this help message and exit
+
+  Examples:
+    # Use defaults (pod/container "debug-nslookup") in current namespace
+    nslookup_k8s --target my-service.default.svc.cluster.local
+
+    # Pick a pod/container and namespace explicitly
+    nslookup_k8s --pod mypod --container app --target kubernetes --namespace kube-system
+  EOF
+    }
+
+    pod="debug-nslookup"
+    container="debug-nslookup"
+    target=""
+    namespace=""
+
+    # short + long option parsing
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        -p|--pod)        pod=$2; shift 2 ;;
+        -c|--container)  container=$2; shift 2 ;;
+        -t|--target)     target=$2; shift 2 ;;
+        -n|--namespace)  namespace="--namespace=$2"; shift 2 ;;
+        -h|--help)       usage; return 0 ;;
+        --)              shift; break ;;
+        -*)
+          echo "Unknown option: $1" >&2
+          usage
+          return 1
+          ;;
+        *) break ;;
+      esac
+    done
+
+    if [ -z "$target" ]; then
+      echo "Error: --target is required." >&2
+      usage
+      return 1
+    fi
+
+    kubectl exec -it "$pod" $namespace --container "$container" -- \
+      /bin/bash -c "apt-get update -qq && apt-get install -y -qq dnsutils && nslookup $target"
+  }
+
+  # ---------------------- zsh completion for nslookup_k8s -----------------------
+  # Helper: discover namespace already typed on the command line
+  _nslookup_k8s_cli_namespace() {
+    local i
+    for (( i=1; i<=$#words; i++ )); do
+      case ${words[i]} in
+        -n|--namespace)
+          echo ${words[i+1]}
+          return
+          ;;
+        --namespace=*)
+          echo ${words[i]#--namespace=}
+          return
+          ;;
+      esac
+    done
+  }
+
+  # Helper: discover exec pod already typed (defaults to debug-nslookup if not set)
+  _nslookup_k8s_cli_pod() {
+    local i
+    for (( i=1; i<=$#words; i++ )); do
+      case ${words[i]} in
+        -p|--pod)
+          echo ${words[i+1]}
+          return
+          ;;
+        --pod=*)
+          echo ${words[i]#--pod=}
+          return
+          ;;
+      esac
+    done
+    echo "debug-nslookup"
+  }
+
+  # Complete namespaces via kubectl
+  _k8s_namespaces() {
+    local -a ns
+    ns=($(kubectl get ns --no-headers -o custom-columns=:metadata.name 2>/dev/null))
+    _values 'namespaces' $ns
+  }
+
+  # Complete pods for a given namespace (or current if none)
+  _k8s_pods_for_ns() {
+    local nsflag=()
+    [[ -n "$1" ]] && nsflag=(--namespace "$1")
+    local -a pods
+    pods=($(kubectl get pods "${nsflag[@]}" --no-headers -o custom-columns=:metadata.name 2>/dev/null))
+    _values 'pods' $pods
+  }
+
+  # target completion = pods in namespace, excluding the exec pod
+  _nslookup_k8s_complete_target() {
+    local ns="$(_nslookup_k8s_cli_namespace)"
+    local execpod="$(_nslookup_k8s_cli_pod)"
+    local nsflag=()
+    [[ -n "$ns" ]] && nsflag=(--namespace "$ns")
+
+    local -a pods filtered
+    pods=($(kubectl get pods "${nsflag[@]}" --no-headers -o custom-columns=:metadata.name 2>/dev/null))
+    filtered=()
+    for p in $pods; do
+      [[ "$p" == "$execpod" ]] && continue
+      filtered+="$p"
+    done
+    compadd -a filtered
+  }
+
+  # Main completion dispatcher
+  _nslookup_k8s() {
+    local curcontext="$curcontext" state
+    typeset -A opt_args
+
+    _arguments -s -S \
+      '(-h --help)'{-h,--help}'[Show help]' \
+      '(-p --pod)'{-p,--pod}'[Pod to exec into (default: debug-nslookup)]:pod name:->pod' \
+      '(-c --container)'{-c,--container}'[Container within the pod (default: debug-nslookup)]:container name:' \
+      '(-t --target)'{-t,--target}'[Pod/hostname to resolve]:target:->target' \
+      '(-n --namespace)'{-n,--namespace}'[Kubernetes namespace]:namespace:_k8s_namespaces' \
+      '*::arg:->rest' && return
+
+    case $state in
+      pod)
+        _k8s_pods_for_ns "$(_nslookup_k8s_cli_namespace)"
+        ;;
+      target)
+        _nslookup_k8s_complete_target
+        ;;
+    esac
+  }
+
+  # Register completion for the function
+  autoload -U +X compinit 2>/dev/null && compinit
+  compd
+  '';
+
+    ### minio related helper functions ###
+    ".scripts/helper_funcs/minio_keys.sh".text = ''
+    create-miniokey() {
+      MUSER=${1-"devuser"}
+      mc admin user svcacct add m1 $MUSER
+    }
+    '';
+
+    ### git related helper funcs ###
+    ".scripts/helper_funcs/git_helpers.sh".text = ''
+    set-gitssh-origin() {
+      local baseurl="git@github.com:babbage88"
+      local reponame="infra-cli.git"
+      local remotename="origin"
+      while [[ $# -gt 0 ]]; do
+          case "$1" in
+              --baseurl)
+                  baseurl="$2"
+                  shift 2
+                  ;;
+              --reponame)
+                  reponame="$2"
+                  shift 2
+                  ;;
+              --remotename)
+                  remotename="$2"
+                  shift 2
+                  ;;
+              -h|--help)
+                  echo "Usage: set-gitssh-origin [--baseurl <url>] [--reponame <string>] [--remotename <string>]"
+                  echo "  --baseurl   Base Github URL (default: $baseurl)"
+                  echo "  --reponame   Repo short name (default: $reponame)"
+                  echo "  --remotename The name for the remote entry. (default: $remotename)"
+                  echo "  -h, --help    Show this help message"
+                  return 0
+                  ;;
+              *)
+                  echo "Unknown argument: $1"
+                  echo "Use -h or --help for usage information."
+                  return 1
+                  ;;
+          esac
+      done
+      echo "Changing $remotename to: ${baseurl}/${reponame}"
+      git remote set-url $remotename ${baseurl}/${reponame}
+      echo
+      export outp=$(git remote -v)
+      echo "git remote -v commd output:"
+      echo $outp
+    }
+    '';
+
+    ### update-bind command for syncing dns via ansible playbook ###
+    ".scripts/helper_funcs/update_bind.sh".text = ''
+    update-bind() {
+      local inventory="$HOME/projects/Homelab.Configs/ansible/playbooks/dns/inventory"
+      local playbook="$HOME/projects/Homelab.Configs/ansible/playbooks/dns/main.yml"
+
+      while [[ $# -gt 0 ]]; do
+          case "$1" in
+              --inventory)
+                  inventory="$2"
+                  shift 2
+                  ;;
+              --playbook)
+                  playbook="$2"
+                  shift 2
+                  ;;
+              -h|--help)
+                  echo "Usage: run_ansible [--inventory <path>] [--playbook <path>]"
+                  echo "  --inventory   Path to Ansible inventory file (default: $inventory)"
+                  echo "  --playbook    Path to Ansible playbook file (default: $playbook)"
+                  echo "  -h, --help    Show this help message"
+                  return 0
+                  ;;
+              *)
+                  echo "Unknown argument: $1"
+                  echo "Use -h or --help for usage information."
+                  return 1
+                  ;;
+          esac
+      done
+
+      ansible-playbook -i "$inventory" "$playbook"
+    }
+
+    flush-dns(){
+      sudo systemctl restart systemd-resolved.service
+    }
+
+    '';
+
     ### ssh helper functions ###
     ".scripts/ssh_utils.sh".text = ''
       # Function to start an interactive shell in the specified pod
@@ -173,91 +420,89 @@
 
     ### Function to clean up or list terminating pods ###
     ".scripts/helper_funcs/kube_cleanup_terminating.sh".text = ''
-      kube_cleanup_terminating_pods() {
-          usage() {
-              cat <<EOF
-      Usage: kube_cleanup_terminating_pods [OPTIONS]
+    kube_cleanup_terminating_pods() {
+        usage() {
+            cat <<EOF
+    Usage: kube_cleanup_terminating_pods [OPTIONS]
 
-      Find and delete pods stuck in "Terminating" state.
+    Find and delete pods stuck in "Terminating" state.
 
-      Options:
-        -n, --namespace NS     Specify the namespace to search in
-            --all-namespaces   Search across all namespaces
-            --show-only        Only list terminating pods (do not delete)
-        -h, --help             Show this help message
-      EOF
-          }
+    Options:
+      -n, --namespace NS     Specify the namespace to search in
+      --all-namespaces   Search across all namespaces
+      --show-only        Only list terminating pods (do not delete)
+      -h, --help             Show this help message
+    EOF
+        }
 
-          namespace=""
-          all_namespaces=""
-          show_only=""
+        namespace=""
+        all_namespaces=""
+        show_only=""
 
-          while [ $# -gt 0 ]; do
-              case "$1" in
-                  -n|--namespace)
-                      shift
-                      [ -z "$1" ] && { echo "Error: missing namespace name" >&2; usage; return 1; }
-                      namespace="--namespace=$1"
-                      ;;
-                  --all-namespaces)
-                      all_namespaces="--all-namespaces"
-                      ;;
-                  --show-only)
-                      show_only=1
-                      ;;
-                  -h|--help)
-                      usage
-                      return 0
-                      ;;
-                  -*)
-                      echo "Unknown option: $1" >&2
-                      usage
-                      return 1
-                      ;;
-                  *)
-                      break
-                      ;;
-              esac
-              shift
-          done
+        while [ $# -gt 0 ]; do
+            case "$1" in
+                -n|--namespace)
+                    shift
+                    [ -z "$1" ] && { echo "Error: missing namespace name" >&2; usage; return 1; }
+                    namespace="--namespace=$1"
+                    ;;
+                --all-namespaces)
+                    all_namespaces="--all-namespaces"
+                    ;;
+                --show-only)
+                    show_only=1
+                    ;;
+                -h|--help)
+                    usage
+                    return 0
+                    ;;
+                -*)
+                    echo "Unknown option: $1" >&2
+                    usage
+                    return 1
+                    ;;
+                *)
+                    break
+                    ;;
+            esac
+            shift
+        done
 
-          if [ -n "$namespace" ] && [ -n "$all_namespaces" ]; then
-              echo "Error: Cannot use both --namespace and --all-namespaces" >&2
-              usage
-              return 1
-          fi
-
-          if [ -n "$all_namespaces" ]; then
-              pods=$(kubectl get pods --all-namespaces | grep Terminating | awk '{print $2 "|" $1}')
-              if [ -z "$pods" ]; then
-                  echo "No terminating pods found"
-                  return 0
-              fi
-              echo "$pods" | while IFS="|" read -r pod ns; do
-                  if [ -n "$show_only" ]; then
-                      echo "Terminating pod: $pod (namespace: $ns)"
-                  else
-                      echo "Deleting pod: $pod (namespace: $ns)"
-                      kubectl delete pod "$pod" --namespace="$ns" --grace-period=0 --force
-                  fi
-              done
-          else
-              pods=$(kubectl get pods $namespace | grep Terminating | awk '{print $1}')
-              if [ -z "$pods" ]; then
-                  echo "No terminating pods found"
-                  return 0
-              fi
-              for p in $pods; do
-                  if [ -n "$show_only" ]; then
-                      echo "Terminating pod: $p $namespace"
-                  else
-                      echo "Deleting pod: $p $namespace"
-                      kubectl delete pod "$p" $namespace --grace-period=0 --force
-                  fi
-              done
-          fi
+        if [ -n "$namespace" ] && [ -n "$all_namespaces" ]; then
+            echo "Error: Cannot use both --namespace and --all-namespaces" >&2
+            usage
+            return 1
+        fi
+        if [ -n "$all_namespaces" ]; then
+            pods=$(kubectl get pods --all-namespaces | grep Terminating | awk '{print $2 "|" $1}')
+            if [ -z "$pods" ]; then
+                echo "No terminating pods found"
+                return 0
+            fi
+            echo "$pods" | while IFS="|" read -r pod ns; do
+                if [ -n "$show_only" ]; then
+                    echo "Terminating pod: $pod (namespace: $ns)"
+                else
+                    echo "Deleting pod: $pod (namespace: $ns)"
+                    kubectl delete pod "$pod" --namespace="$ns" --grace-period=0 --force
+                fi
+            done
+        else
+            pods=$(kubectl get pods $namespace | grep Terminating | awk '{print $1}')
+            if [ -z "$pods" ]; then
+                echo "No terminating pods found"
+                return 0
+            fi
+            for p in $pods; do
+                if [ -n "$show_only" ]; then
+                    echo "Terminating pod: $p $namespace"
+                else
+                    echo "Deleting pod: $p $namespace"
+                    kubectl delete pod "$p" $namespace --grace-period=0 --force
+                fi
+            done
+        fi
       }
-
       # zsh completion for kube_cleanup_terminating_pods
       _kube_cleanup_terminating_pods() {
         local -a opts
@@ -282,6 +527,7 @@
 
     # Register the completion
     compdef _kube_cleanup_terminating_pods kube_cleanup_terminating_pods
+
     '';
   };
 
@@ -344,9 +590,12 @@
       source <(infractl completion zsh)
     
       # Source custom functions
+      source "$HOME/.scripts/helper_funcs/minio_keys.sh"
+      source "$HOME/.scripts/helper_funcs/git_helpers.sh"
       source "$HOME/.scripts/helper_funcs/nodepods.sh"
       source "$HOME/.scripts/helper_funcs/podterm.sh"
       source "$HOME/.scripts/helper_funcs/kube_cleanup_terminating.sh"
+      source "$HOME/.scripts/helper_funcs/update_bind.sh"
       source "$HOME/.scripts/ssh_utils.sh"
       source "$HOME/.scripts/install_latest_nixhm.sh"
       
