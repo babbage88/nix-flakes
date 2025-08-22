@@ -590,6 +590,7 @@
       source <(infractl completion zsh)
     
       # Source custom functions
+      source "$HOME/.scripts/helper_funcs/nslookup_k8s.sh"
       source "$HOME/.scripts/helper_funcs/minio_keys.sh"
       source "$HOME/.scripts/helper_funcs/git_helpers.sh"
       source "$HOME/.scripts/helper_funcs/nodepods.sh"
