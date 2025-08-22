@@ -15,10 +15,7 @@ Options:
   -h, --help              Show this help message and exit
 
 Examples:
-  # Use defaults (pod/container "debug-nslookup") in current namespace
   nslookup_k8s --target my-service.default.svc.cluster.local
-
-  # Pick a pod/container and namespace explicitly
   nslookup_k8s --pod mypod --container app --target kubernetes --namespace kube-system
 EOF
   }
@@ -28,7 +25,7 @@ EOF
   target=""
   namespace=""
 
-  # short + long option parsing
+  # Parse short + long options
   while [ $# -gt 0 ]; do
     case "$1" in
       -p|--pod)        pod=$2; shift 2 ;;
@@ -40,8 +37,7 @@ EOF
       -*)
         echo "Unknown option: $1" >&2
         usage
-        return 1
-        ;;
+        return 1 ;;
       *) break ;;
     esac
   done
@@ -52,9 +48,24 @@ EOF
     return 1
   fi
 
+  # Check if pod exists
+  if ! kubectl get pod "$pod" $namespace &>/dev/null; then
+    echo "Pod $pod not found, creating..."
+    kubectl run "$pod" $namespace --image=debian:trixie-slim --restart=Never -- sleep infinity
+
+    echo "Waiting for pod $pod to be ready..."
+    kubectl wait $namespace --for=condition=Ready pod/"$pod" --timeout=60s
+    if [ $? -ne 0 ]; then
+      echo "Pod $pod did not become ready in time." >&2
+      return 1
+    fi
+  fi
+
+  # Run nslookup inside the pod
   kubectl exec -it "$pod" $namespace --container "$container" -- \
     /bin/bash -c "apt-get update -qq && apt-get install -y -qq dnsutils && nslookup $target"
 }
+
 
 # ---------------------- zsh completion for nslookup_k8s -----------------------
 # Helper: discover namespace already typed on the command line
@@ -150,4 +161,5 @@ _nslookup_k8s() {
 
 # Register completion for the function
 autoload -U +X compinit 2>/dev/null && compinit
-compd
+compdef _nslookup_k8s nslookup_k8s
+

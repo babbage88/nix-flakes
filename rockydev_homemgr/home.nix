@@ -69,10 +69,12 @@
     ".scripts/helper_funcs/nslookup_k8s.sh".text = ''
     nslookup_k8s() {
       usage() {
-              cat <<EOF
+        /usr/bin/cat <<EOF
     Usage: nslookup_k8s [OPTIONS]
 
     Run an nslookup inside a Kubernetes pod to test DNS/service resolution.
+    If an existing pod/container is not specified, one will be created with 
+    the name debug-nslookup
 
     Options:
       -p, --pod POD           Pod name to exec into (default: debug-nslookup)
@@ -119,6 +121,20 @@
         return 1
       fi
 
+      # Check if pod exists
+      if ! kubectl get pod "$pod" $namespace &>/dev/null; then
+        echo "Pod $pod not found, creating..."
+        kubectl run "$pod" $namespace --image=debian:trixie-slim --restart=Never -- sleep infinity
+
+        echo "Waiting for pod $pod to be ready..."
+        kubectl wait $namespace --for=condition=Ready pod/"$pod" --timeout=60s
+        if [ $? -ne 0 ]; then
+          echo "Pod $pod did not become ready in time." >&2
+          return 1
+        fi
+      fi
+
+      # Run nslookup inside the pod
       kubectl exec -it "$pod" $namespace --container "$container" -- \
         /bin/bash -c "apt-get update -qq && apt-get install -y -qq dnsutils && nslookup $target"
     }
@@ -216,7 +232,7 @@
 
     # Register completion for the function
     autoload -U +X compinit 2>/dev/null && compinit
-    compd
+    compdef _nslookup_k8s nslookup_k8s
     '';
 
     ### git related helper funcs ###
@@ -411,7 +427,7 @@
     ".scripts/helper_funcs/kube_cleanup_terminating.sh".text = ''
     kube_cleanup_terminating_pods() {
         usage() {
-            cat <<EOF
+            /usr/bin/cat <<EOF
     Usage: kube_cleanup_terminating_pods [OPTIONS]
 
     Find and delete pods stuck in "Terminating" state.
@@ -591,6 +607,7 @@
       
       # run ssh-agent in background
       eval "$(ssh-agent -s)"
+      bindkey -e
 
     '';
 
