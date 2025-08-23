@@ -65,6 +65,14 @@
   ];
 
   home.file = {
+
+    ### minio - helper func to gennerate minio key for the specified user defaults: devuser ###
+    ".scripts/helper_funcs/minio_keys.sh".text = ''
+    create-miniokey() {
+      MUSER=''${1-"devuser"}
+      mc admin user svcacct add m1 $MUSER
+    }
+    '';
     ### nslookup_k8s - helper function to performing nslookup for kubernetes service ###
     ".scripts/helper_funcs/nslookup_k8s.sh".text = ''
     nslookup_k8s() {
@@ -533,6 +541,33 @@
     # Register the completion
     compdef _kube_cleanup_terminating_pods kube_cleanup_terminating_pods
 
+    delete_zero() {
+        local namespace="default"
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+            -n | --namespace)
+                namespace="$2"
+                shift 2
+                ;;
+            -h | --help)
+                echo "Usage: delete_zero [--namespace <namespace>]"
+                echo "  -n, --namespace   Base Github URL (default: $namespace)"
+                echo "  -h, --help    Show this help message"
+                return 0
+                ;;
+            *)
+                echo "Unknown argument: $1"
+                echo "Use -h or --help for usage information."
+                return 1
+                ;;
+            esac
+        done
+        export namespace
+        echo "Deleteing replicasets with 0 replicas in namespace: $namespace"
+        kubectl -n $namespace get replicaset -o json |
+            jq -r '.items[] | select(.spec.replicas == 0) | .metadata.name' |
+            xargs kubectl -n $namespace delete replicaset
+    }
     '';
   };
 
@@ -620,6 +655,7 @@
       cat = "bat";
       nsr = "home-manager switch --flake ~/.config/home-manager/#jtrahan -b backup";
       install-nhmg = "pull_build_nixhm";
+      create-scripts-tar = "cd $HOME && tar -hczvf _scripts_dir.tar.gz .scripts/";
     };
 };
 
