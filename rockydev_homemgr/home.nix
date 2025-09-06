@@ -29,15 +29,17 @@
     pkgs.bun 
     pkgs.docker_28
     pkgs.kubectl
+    pkgs.talosctl
+    pkgs.kubernetes-helm
     pkgs.bat
     pkgs.neovim
     pkgs.btop
     pkgs.htop
     pkgs.go
-    pkgs.talosctl
     pkgs.shellcheck
     pkgs.rustup
     pkgs.jq
+    pkgs.yq-go
     pkgs.sqlite
     pkgs.postgresql_18
     pkgs.uv
@@ -50,6 +52,7 @@
     pkgs.cobra-cli
     pkgs.fastfetch
     pkgs.bat
+    pkgs.bind
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -648,6 +651,7 @@
 
     shellAliases = {
       k = "kubectl";
+      cls = "clear";
       ip = "ip --color=auto";
       grep = "grep --color=auto";
       ls = "ls --color=auto";
