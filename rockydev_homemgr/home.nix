@@ -43,7 +43,7 @@
     pkgs.sqlite
     pkgs.postgresql_18
     pkgs.uv
-    pkgs.dotnet-sdk
+    pkgs.dotnetCorePackages.sdk_10_0-bin
     pkgs.opentofu
     pkgs.libgcc
     pkgs.zig 
@@ -650,6 +650,9 @@
     '';
 
     shellAliases = {
+      p1 = "ping -c 5 1.1.1.1";
+      pgg = "ping -c 5 google.com";
+      pgw = "ping -c 5 10.0.0.254";
       k = "kubectl";
       cls = "clear";
       ip = "ip --color=auto";
