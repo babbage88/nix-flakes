@@ -5,28 +5,6 @@ NIXHOMECFG="$NIXSRCDIR/home.nix"
 export FLAKEKEY="$HMDIR/#jtrahan"
 
 ##### ANSI Color Codes #####
-#C_B_RED='\033[31;1m'
-#C_B_GREEN='\033[32;1m'
-#C_B_YELLOW='\033[33;1m'
-#C_B_BLUE='\033[34;1m'
-#C_B_MAGENTA='\033[35;1m'
-#C_B_CYAN='\033[36;1m'
-#C_B_WHITE='\033[37;1m'
-#C_WHITE_ON_BLACK='\033[30;47m'
-
-#C_RED='\033[31m'
-#C_GREEN='\033[32m'
-#C_YELLOW='\033[33m'
-#C_BLUE='\033[34m'
-#C_BLUE='\033[35m'
-#C_CYAN='\033[36m'
-#BOLD_WHITE='\033[01;97m'
-#BOLD_GREEN='\033[01;96m'
-#BOLD_BLUE='\033[01;94m'
-#BOLD_YELLOW='\033[01;93m'
-#BOLD_RED='\033[01;92m'
-#C_RESET='\033[0m'
-
 BOLD=$(tput bold)
 RESET=$(tput sgr0)
 C_RESET=$(tput sgr0)
@@ -70,7 +48,7 @@ ${B_BLUE}#############################################${RESET}
 EOF
 )
 
-finish_msg="${B_WHITE}flake key: ${B_GREEN}${FLAKEKEY}${RESET}"
+finish_msg="## ${B_WHITE}flake key: ${B_GREEN}${FLAKEKEY}${RESET}"
 completed_switch_msg=$(
 	cat <<EOF
 ${B_MAGENTA}#######################################${RESET}
