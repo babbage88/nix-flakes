@@ -1,0 +1,3 @@
+[submodule "rockydev_homemgr/scripts"]
+	path = rockydev_homemgr/scripts
+	url = https://github.com/babbage88/helper-scripts.git
