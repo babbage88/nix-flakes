@@ -49,7 +49,7 @@ update_nixpkg() {
 	nix flake update
 	printf "${BOLD_WHITE}switching home-manager to flake:${C_B_GREEN} %s\\n${C_RESET}" "$flake_key"
 	home-manager switch --flake $flake_key
-	printf "${BOLD_WHITE}completed${C_GREEN}flake_key: ${C_B_GREEN}${flake_key}${C_RESET}\\n"
+	printf "${BOLD_WHITE}completed flake_key:${C_B_GREEN}${flake_key}${C_RESET}\\n"
 	printf "${BOLD_WHITE}changing directory back to the starting dir:${C_B_BLUE} %s\\n${C_RESET}" "$cur_dir_start"
 	cd $cur_dir_start
 }
