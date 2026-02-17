@@ -9,13 +9,16 @@ C_B_RED='\033[31;1m'
 C_B_GREEN='\033[32;1m'
 C_B_YELLOW='\033[33;1m'
 C_B_BLUE='\033[34;1m'
+C_B_MAGENTA='\033[35;1m'
 C_B_CYAN='\033[36;1m'
 C_B_WHITE='\033[37;1m'
+C_WHITE_ON_BLACK='\033[30;47m'
 
 C_RED='\033[31m'
 C_GREEN='\033[32m'
 C_YELLOW='\033[33m'
 C_BLUE='\033[34m'
+C_BLUE='\033[35m'
 C_CYAN='\033[36m'
 BOLD_WHITE='\033[01;97m'
 BOLD_GREEN='\033[01;96m'
@@ -30,9 +33,9 @@ install_hm() {
 	local src_hm_cfg=${3:-$NIXHOMECFG}
 
 	mkdir -p $dsthomedir
-	printf "${BOLD_WHITE}copying %s to %s...\\n${C_RESET}" "$src_hm_cfg" "$dsthomedir"
+	printf "${BOLD_WHITE}copying${C_B_MAGENTA} %s ${BOLD_WHITE}to ${C_WHITE_ON_BLACK}%s${C_RESET}\\n" "$src_hm_cfg" "$dsthomedir"
 	cp $src_hm_cfg $dsthomedir/home.nix
-	printf "${BOLD_WHITE}copying flake files to${C_CYAN} %s${BOLD_WHITE}...\\n${C_RESET}" "$dsthomedir"
+	printf "${BOLD_WHITE}copying flake files to${C_CYAN} %s${BOLD_WHITE}...${C_RESET}\\n" "$dsthomedir"
 	cp $srcdir/flake.* $dsthomedir/
 }
 
@@ -49,8 +52,8 @@ update_nixpkg() {
 	nix flake update
 	printf "${BOLD_WHITE}switching home-manager to flake:${C_B_GREEN} %s\\n${C_RESET}" "$flake_key"
 	home-manager switch --flake $flake_key
-	printf "${BOLD_WHITE}completed flake_key:${C_B_GREEN}${flake_key}${C_RESET}\\n"
-	printf "${BOLD_WHITE}changing directory back to the starting dir:${C_B_BLUE} %s\\n${C_RESET}" "$cur_dir_start"
+	printf "${BOLD_WHITE}completed flake_key: ${C_B_GREEN}${flake_key}${C_RESET}\\n"
+	printf "${BOLD_WHITE}changing directory back to the starting dir: ${C_B_BLUE} %s\\n${C_RESET}" "$cur_dir_start"
 	cd $cur_dir_start
 }
 
@@ -60,7 +63,7 @@ hm_switch() {
 	local cur_dir_start=$(pwd)
 
 	export FLAKEKEY=$flake_key
-	echo "${BOLD_WHITE}flake key is: ${C_B_GREEN}$FLAKEKEY${C_RESET}"
+	echo -e "${BOLD_WHITE}flake key is: ${C_B_GREEN}$FLAKEKEY${C_RESET}"
 	printf "${BOLD_WHITE}cd into home-manager install dir ${C_B_YELLOW}%s...\\n${C_RESET}" "$dsthomedir"
 	cd $dsthomedir
 	printf "${BOLD_WHITE}switching home-manager to ${C_B_GREEN}flake: %s\\n${C_RESET}" "$flake_key"
