@@ -35,7 +35,7 @@
     pkgs.neovim
     pkgs.btop
     pkgs.htop
-    pkgs.go
+    pkgs.go_1_26
     pkgs.shellcheck
     pkgs.rustup
     pkgs.jq
