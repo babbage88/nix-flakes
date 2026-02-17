@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+source ~/projects/helper-scripts/install_home_mgr.sh
+install_and_updatepkg

@@ -2,6 +2,7 @@
 NIXSRCDIR="$HOME/projects/nix-flakes/rockydev_homemgr"
 HMDIR="$HOME/.config/home-manager"
 NIXHOMECFG="$NIXSRCDIR/home.nix"
+SCRIPTS_SRC_DIR="$NIXSRCDIR/scripts"
 export FLAKEKEY="$HMDIR/#jtrahan"
 
 ##### ANSI Color Codes #####
@@ -64,12 +65,15 @@ install_hm() {
 	local srcdir=${1:-$NIXSRCDIR}
 	local dsthomedir=${2:-$HMDIR}
 	local src_hm_cfg=${3:-$NIXHOMECFG}
+	local src_scripts_dir=${4:-"$srcdir/scripts"}
 
 	mkdir -p $dsthomedir
 	printf "${BOLD_WHITE}copying${C_B_MAGENTA} %s ${BOLD_WHITE}to ${C_WHITE_ON_BLACK}%s${C_RESET}\\n" "$src_hm_cfg" "$dsthomedir"
 	cp $src_hm_cfg $dsthomedir/home.nix
 	printf "${BOLD_WHITE}copying flake files to${C_CYAN} %s${BOLD_WHITE}...${C_RESET}\\n" "$dsthomedir"
 	cp $srcdir/flake.* $dsthomedir/
+	printf "${BOLD_WHITE}copying scripts source dir: ${C_B_MAGENTA}%s${C_RESET} to${C_CYAN} %s${BOLD_WHITE}...${C_RESET}\\n" "$src_scripts_dir" "$dsthomedir"
+	cp -r --force $src_scripts_dir $dsthomedir/
 	echo
 	echo
 	printf "${BOLD_WHITE}\\n%s${C_RESET}\\n" "$completed_install_msg"

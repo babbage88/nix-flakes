@@ -105,8 +105,8 @@
 
     ### nix home-manager helper funcs - install config from local git repo ###
     ".scripts/install_latest_nixhm.sh" = {
-      source = ./install.sh;
-      executable = true;
+      source = ./scripts/install_home_mgr.sh;
+      executable = false;
     };
 
     # Function to start an interactive shell in the specified pod
@@ -210,7 +210,7 @@
       ll = "ls -lah --color=auto";
       cat = "bat";
       nsr = "home-manager switch --flake ~/.config/home-manager/#jtrahan -b backup";
-      install-nhmg = "pull_build_nixhm";
+      install-nhmg = "install_and_updatepkg";
       create-scripts-tar = "cd $HOME && tar -hczvf _scripts_dir.tar.gz .scripts/";
     };
 };
