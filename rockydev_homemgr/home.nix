@@ -27,7 +27,7 @@
     pkgs.sqlc 
     pkgs.nodejs_24
     pkgs.bun 
-    pkgs.docker_28
+    pkgs.docker_29
     pkgs.kubectl
     pkgs.talosctl
     pkgs.kubernetes-helm
@@ -37,13 +37,16 @@
     pkgs.htop
     pkgs.go_1_26
     pkgs.shellcheck
+    pkgs.javaPackages.compiler.openjdk25
+    pkgs.bash
+    pkgs.bundler.ruby
     pkgs.rustup
     pkgs.jq
     pkgs.yq-go
     pkgs.sqlite
     pkgs.postgresql_18
     pkgs.uv
-    pkgs.dotnetCorePackages.sdk_10_0-bin
+    pkgs.dotnet-sdk_10
     pkgs.opentofu
     pkgs.libgcc
     pkgs.zig 
@@ -51,7 +54,6 @@
     pkgs.gnumake
     pkgs.cobra-cli
     pkgs.fastfetch
-    pkgs.bat
     pkgs.bind
     pkgs.nmap
     # # It is sometimes useful to fine-tune packages, for example, by applying
