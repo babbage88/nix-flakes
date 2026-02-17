@@ -5,27 +5,82 @@ NIXHOMECFG="$NIXSRCDIR/home.nix"
 export FLAKEKEY="$HMDIR/#jtrahan"
 
 ##### ANSI Color Codes #####
-C_B_RED='\033[31;1m'
-C_B_GREEN='\033[32;1m'
-C_B_YELLOW='\033[33;1m'
-C_B_BLUE='\033[34;1m'
-C_B_MAGENTA='\033[35;1m'
-C_B_CYAN='\033[36;1m'
-C_B_WHITE='\033[37;1m'
-C_WHITE_ON_BLACK='\033[30;47m'
+#C_B_RED='\033[31;1m'
+#C_B_GREEN='\033[32;1m'
+#C_B_YELLOW='\033[33;1m'
+#C_B_BLUE='\033[34;1m'
+#C_B_MAGENTA='\033[35;1m'
+#C_B_CYAN='\033[36;1m'
+#C_B_WHITE='\033[37;1m'
+#C_WHITE_ON_BLACK='\033[30;47m'
 
-C_RED='\033[31m'
-C_GREEN='\033[32m'
-C_YELLOW='\033[33m'
-C_BLUE='\033[34m'
-C_BLUE='\033[35m'
-C_CYAN='\033[36m'
-BOLD_WHITE='\033[01;97m'
-BOLD_GREEN='\033[01;96m'
-BOLD_BLUE='\033[01;94m'
-BOLD_YELLOW='\033[01;93m'
-BOLD_RED='\033[01;92m'
-C_RESET='\033[0m'
+#C_RED='\033[31m'
+#C_GREEN='\033[32m'
+#C_YELLOW='\033[33m'
+#C_BLUE='\033[34m'
+#C_BLUE='\033[35m'
+#C_CYAN='\033[36m'
+#BOLD_WHITE='\033[01;97m'
+#BOLD_GREEN='\033[01;96m'
+#BOLD_BLUE='\033[01;94m'
+#BOLD_YELLOW='\033[01;93m'
+#BOLD_RED='\033[01;92m'
+#C_RESET='\033[0m'
+
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+C_RESET=$(tput sgr0)
+
+C_RED=$(tput setaf 1)
+C_GREEN=$(tput setaf 2)
+C_YELLOW=$(tput setaf 3)
+C_BLUE=$(tput setaf 4)
+C_MAGENTA=$(tput setaf 5)
+C_CYAN=$(tput setaf 6)
+C_WHITE=$(tput setaf 7)
+
+# Bold colors
+C_B_RED="${BOLD}${C_RED}"
+C_B_GREEN="${BOLD}${C_GREEN}"
+C_B_YELLOW="${BOLD}${C_YELLOW}"
+C_B_BLUE="${BOLD}${C_BLUE}"
+C_B_MAGENTA="${BOLD}${C_MAGENTA}"
+C_B_CYAN="${BOLD}${C_CYAN}"
+BOLD_WHITE="${BOLD}${C_WHITE}"
+# White on black (foreground 7 background 0)
+C_WHITE_ON_BLACK="$(tput setaf 7)$(tput setab 0)"
+
+completed_install_msg=$(
+	cat <<EOF
+${B_GREEN}#######################################${RESET}
+${B_GREEN}#                                     #${RESET}
+${B_GREEN}#  Completed installing home-manager  #${RESET}
+${B_GREEN}#                                     #${RESET}
+${B_GREEN}#######################################${RESET}
+EOF
+)
+
+completed_updatepkg_msg=$(
+	cat <<EOF
+${B_BLUE}#############################################${RESET}
+${B_BLUE}#                                           #${RESET}
+${B_BLUE}#  Completed updating nix-channel and pkgs  #${RESET}
+${B_BLUE}#                                           #${RESET}
+${B_BLUE}#############################################${RESET}
+EOF
+)
+
+finish_msg="${B_WHITE}flake key: ${B_GREEN}${FLAKEKEY}${RESET}"
+completed_switch_msg=$(
+	cat <<EOF
+${B_MAGENTA}#######################################${RESET}
+${B_MAGENTA}#                                     #${RESET}
+${B_MAGENTA}#   Completed home-manager switch     #${RESET}
+${B_MAGENTA}#                                     #${RESET}
+${B_MAGENTA}#######################################${RESET}
+${finish_msg}
+EOF
+)
 
 install_hm() {
 	local srcdir=${1:-$NIXSRCDIR}
@@ -37,6 +92,9 @@ install_hm() {
 	cp $src_hm_cfg $dsthomedir/home.nix
 	printf "${BOLD_WHITE}copying flake files to${C_CYAN} %s${BOLD_WHITE}...${C_RESET}\\n" "$dsthomedir"
 	cp $srcdir/flake.* $dsthomedir/
+	echo
+	echo
+	printf "${BOLD_WHITE}\\n%s${C_RESET}\\n" "$completed_install_msg"
 }
 
 update_nixpkg() {
@@ -55,6 +113,8 @@ update_nixpkg() {
 	printf "${BOLD_WHITE}completed flake_key: ${C_B_GREEN}${flake_key}${C_RESET}\\n"
 	printf "${BOLD_WHITE}changing directory back to the starting dir: ${C_B_BLUE} %s\\n${C_RESET}" "$cur_dir_start"
 	cd $cur_dir_start
+	echo
+	printf "${BOLD_WHITE}\\n%s${C_RESET}\\n" "$completed_updatepkg_msg"
 }
 
 hm_switch() {
@@ -70,6 +130,8 @@ hm_switch() {
 	home-manager switch --flake $flake_key
 	printf "${BOLD_WHITE}changing directory back to the starting dir:${C_B_BLUE} %s\\n${C_RESET}" "$cur_dir_start"
 	cd $cur_dir_start
+	echo
+	printf "${BOLD_WHITE}\\n%s${C_RESET}\\n" "$completed_switch_msg"
 }
 
 install_and_updatepkg() {
