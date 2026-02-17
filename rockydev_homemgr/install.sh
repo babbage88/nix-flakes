@@ -30,32 +30,32 @@ C_WHITE_ON_BLACK="$(tput setaf 7)$(tput setab 0)"
 
 completed_install_msg=$(
 	cat <<EOF
-${B_GREEN}#######################################${RESET}
-${B_GREEN}#                                     #${RESET}
-${B_GREEN}#  Completed installing home-manager  #${RESET}
-${B_GREEN}#                                     #${RESET}
-${B_GREEN}#######################################${RESET}
+${BOLD_WHITE}#######################################${RESET}
+${BOLD_WHITE}#                                     #${RESET}
+${BOLD_WHITE}#  Completed installing home-manager  #${RESET}
+${BOLD_WHITE}#                                     #${RESET}
+${BOLD_WHITE}#######################################${RESET}
 EOF
 )
 
 completed_updatepkg_msg=$(
 	cat <<EOF
-${B_BLUE}#############################################${RESET}
-${B_BLUE}#                                           #${RESET}
-${B_BLUE}#  Completed updating nix-channel and pkgs  #${RESET}
-${B_BLUE}#                                           #${RESET}
-${B_BLUE}#############################################${RESET}
+${BOLD_WHITE}#############################################${RESET}
+${BOLD_WHITE}#                                           #${RESET}
+${BOLD_WHITE}#  Completed updating nix-channel and pkgs  #${RESET}
+${BOLD_WHITE}#                                           #${RESET}
+${BOLD_WHITE}#############################################${RESET}
 EOF
 )
 
 finish_msg="## ${B_WHITE}flake key: ${B_GREEN}${FLAKEKEY}${RESET}"
 completed_switch_msg=$(
 	cat <<EOF
-${B_MAGENTA}#######################################${RESET}
-${B_MAGENTA}#                                     #${RESET}
-${B_MAGENTA}#   Completed home-manager switch     #${RESET}
-${B_MAGENTA}#                                     #${RESET}
-${B_MAGENTA}#######################################${RESET}
+${BOLD_WHITE}#######################################${RESET}
+${BOLD_WHITE}#                                     #${RESET}
+${BOLD_WHITE}#   Completed home-manager switch     #${RESET}
+${BOLD_WHITE}#                                     #${RESET}
+${BOLD_WHITE}#######################################${RESET}
 ${finish_msg}
 EOF
 )
