@@ -157,6 +157,7 @@
     # For interactive shells only
     initContent = ''
       
+      export DOCKER_HOST=unix:///var/run/docker.sock
       export SCRIPTS_DIR="$HOME/.scripts"
       export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
       export BUN_INSTALL="$HOME/.bun"
