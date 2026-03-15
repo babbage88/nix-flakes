@@ -95,6 +95,11 @@
         source = ./scripts/update_bind.sh;
         executable = false;
     };
+    
+    ".scripts/helper_funcs/kube_cleanup_terminating.sh" = {
+        source = ./scripts/kube_cleanup_terminating.sh;
+        executable = false;
+    };
 
     ### ssh helper functions ###
     ".scripts/ssh_utils.sh" = {
@@ -143,6 +148,7 @@
     EDITOR = "/usr/local/bin/nvim";
     GOPATH = "$HOME/go";
     GOBIN = "$HOME/go/bin";
+    DOCKER_HOST = "unix:///var/run/docker.sock";
   };
 
   programs.zsh = {
