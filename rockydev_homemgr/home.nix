@@ -101,6 +101,16 @@
         executable = false;
     };
 
+    ".scripts/helper_funcs/kube_tls_extract.sh" = {
+        source = ./scripts/kube_tls_extract.sh;
+        executable = false;
+    };
+    
+    ".scripts/helper_funcs/get_kube_dockerinfo.sh" = {
+        source = ./scripts/get_kube_dockerinfo.sh;
+        executable = false;
+    };
+    
     ### ssh helper functions ###
     ".scripts/ssh_utils.sh" = {
       source = ./scripts/ssh_helpers.sh;
@@ -195,6 +205,8 @@
       source "$HOME/.scripts/helper_funcs/nodepods.sh"
       source "$HOME/.scripts/helper_funcs/podterm.sh"
       source "$HOME/.scripts/helper_funcs/kube_cleanup_terminating.sh"
+      source "$HOME/.scripts/helper_funcs/kube_tls_extract.sh"
+      source "$HOME/.scripts/helper_funcs/get_kube_dockerinfo.sh"
       source "$HOME/.scripts/helper_funcs/update_bind.sh"
       source "$HOME/.scripts/ssh_utils.sh"
       source "$HOME/.scripts/install_latest_nixhm.sh"
@@ -219,6 +231,8 @@
       nsr = "home-manager switch --flake ~/.config/home-manager/#jtrahan -b backup";
       install-nhmg = "install_and_updatepkg";
       create-scripts-tar = "cd $HOME && tar -hczvf _scripts_dir.tar.gz .scripts/";
+      kube-get-dockerinfo = "kube_get_dockerinfo";
+      kube-get-dockerinfo = "kube_tls_extract";
     };
 };
 
