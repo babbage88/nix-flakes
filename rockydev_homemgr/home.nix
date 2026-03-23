@@ -251,7 +251,6 @@
       create-scripts-tar = "cd $HOME && tar -hczvf _scripts_dir.tar.gz .scripts/";
       kube-get-dockerinfo = "kube_get_dockerinfo";
       kube-tls-extract = "kube_tls_extract";
-      remove-spaces = "remove_spaces";
     };
 };
 
