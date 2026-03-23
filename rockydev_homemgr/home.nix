@@ -137,9 +137,9 @@
     };
     
     # Function to replace spaces in filename
-    ".scripts/helper_funcs/remove_spaces/remove_spaces.sh" = {
+    ".local/bin/remove-spaces" = {
         source = ./scripts/remove_spaces/remove_spaces.sh;
-        executable = false;
+        executable = true;
     };
 
     # remove_spaces zsh completions
@@ -188,7 +188,7 @@
       export SCRIPTS_DIR="$HOME/.scripts"
       export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
       export BUN_INSTALL="$HOME/.bun"
-      export PATH="$BUN_INSTALL/bin:$PATH"
+      export PATH="$HOME/.local/bin:$BUN_INSTALL/bin:$PATH"
 
       # Source custom functions
       source "$HOME/.scripts/helper_funcs/nslookup_k8s.sh"
@@ -202,7 +202,6 @@
       source "$HOME/.scripts/helper_funcs/update_bind.sh"
       source "$HOME/.scripts/ssh_utils.sh"
       source "$HOME/.scripts/install_latest_nixhm.sh"
-      source "$HOME/.scripts/helper_funcs/remove_spaces/remove_spaces.sh"
 
       # Zsh configuration
       fpath+=($HOME/.zsh/pure)
