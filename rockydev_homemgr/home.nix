@@ -13,7 +13,7 @@
   # You should not change this value, even if you update Home Manager. If you do
   # want to update the value, then make sure to first check the Home Manager
   # release notes.
-  home.stateVersion = "25.05"; # Please read the comment before changing.
+  home.stateVersion = "25.05";
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
@@ -136,6 +136,24 @@
         executable = false;
     };
     
+    # Function to replace spaces in filename
+    ".scripts/helper_funcs/remove_spaces/remove_spaces.sh" = {
+        source = ./scripts/remove_spaces/remove_spaces.sh;
+        executable = false;
+    };
+
+    # remove_spaces zsh completions
+    ".local/share/zsh/site-functions/_remove-spaces" = {
+        source = ./scripts/remove_spaces/remove_spaces.zsh;
+        executable = false;
+    };
+
+    # remove_spaces bash_completions
+    ".local/share/bash-completion/completions/remove-spaces" = {
+        source = ./scripts/remove_spaces/remove_spaces.bash;
+        executable = false;
+    };
+    
   };
 
   # Home Manager can also manage your environment variables through
@@ -166,12 +184,27 @@
 
     # For interactive shells only
     initContent = ''
-      
       export DOCKER_HOST=unix:///var/run/docker.sock
       export SCRIPTS_DIR="$HOME/.scripts"
       export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$BUN_INSTALL/bin:$PATH"
+
+      # Source custom functions
+      source "$HOME/.scripts/helper_funcs/nslookup_k8s.sh"
+      source "$HOME/.scripts/helper_funcs/minio_keys.sh"
+      source "$HOME/.scripts/helper_funcs/git_helpers.sh"
+      source "$HOME/.scripts/helper_funcs/nodepods.sh"
+      source "$HOME/.scripts/helper_funcs/podterm.sh"
+      source "$HOME/.scripts/helper_funcs/kube_cleanup_terminating.sh"
+      source "$HOME/.scripts/helper_funcs/kube_tls_extract.sh"
+      source "$HOME/.scripts/helper_funcs/get_kube_dockerinfo.sh"
+      source "$HOME/.scripts/helper_funcs/update_bind.sh"
+      source "$HOME/.scripts/ssh_utils.sh"
+      source "$HOME/.scripts/install_latest_nixhm.sh"
+      source "$HOME/.scripts/helper_funcs/remove_spaces/remove_spaces.sh"
+
+      # Zsh configuration
       fpath+=($HOME/.zsh/pure)
       setopt autocd
       zstyle ':completion::complete:cd:*' accept-exact '(*/|)..'
@@ -197,24 +230,10 @@
       source <(kubectl completion zsh)
       source <(helm completion zsh)
       source <(infractl completion zsh)
-    
-      # Source custom functions
-      source "$HOME/.scripts/helper_funcs/nslookup_k8s.sh"
-      source "$HOME/.scripts/helper_funcs/minio_keys.sh"
-      source "$HOME/.scripts/helper_funcs/git_helpers.sh"
-      source "$HOME/.scripts/helper_funcs/nodepods.sh"
-      source "$HOME/.scripts/helper_funcs/podterm.sh"
-      source "$HOME/.scripts/helper_funcs/kube_cleanup_terminating.sh"
-      source "$HOME/.scripts/helper_funcs/kube_tls_extract.sh"
-      source "$HOME/.scripts/helper_funcs/get_kube_dockerinfo.sh"
-      source "$HOME/.scripts/helper_funcs/update_bind.sh"
-      source "$HOME/.scripts/ssh_utils.sh"
-      source "$HOME/.scripts/install_latest_nixhm.sh"
       
       # run ssh-agent in background
       eval "$(ssh-agent -s)"
       bindkey -e
-
     '';
 
     shellAliases = {
@@ -233,6 +252,7 @@
       create-scripts-tar = "cd $HOME && tar -hczvf _scripts_dir.tar.gz .scripts/";
       kube-get-dockerinfo = "kube_get_dockerinfo";
       kube-tls-extract = "kube_tls_extract";
+      remove-spaces = "remove_spaces";
     };
 };
 
