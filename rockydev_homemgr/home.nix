@@ -18,7 +18,8 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
-    pkgs.git 
+    pkgs.git
+    pkgs.just
     pkgs.gh 
     pkgs.minio-client
     pkgs.curl
@@ -46,7 +47,7 @@
     pkgs.sqlite
     pkgs.postgresql_18
     pkgs.uv
-    pkgs.dotnet-sdk_10
+    pkgs.dotnet-sdk_11
     pkgs.opentofu
     pkgs.libgcc
     pkgs.zig 
@@ -56,6 +57,7 @@
     pkgs.fastfetch
     pkgs.bind
     pkgs.nmap
+    pkgs.fzf
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -186,7 +188,7 @@
     initContent = ''
       export DOCKER_HOST=unix:///var/run/docker.sock
       export SCRIPTS_DIR="$HOME/.scripts"
-      export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
+      export PATH="$HOME/go/bin:$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$HOME/.local/bin:$BUN_INSTALL/bin:$PATH"
 
