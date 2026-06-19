@@ -179,18 +179,25 @@
     GOPATH = "$HOME/go";
     GOBIN = "$HOME/go/bin";
     DOCKER_HOST = "unix:///var/run/docker.sock";
+    SCRIPTS_DIR = "$HOME/.scripts";
+    BUN_INSTALL = "$HOME/.bun";
   };
+
+  home.sessionPath = [
+    "$HOME/go/bin"
+    "$HOME/.cargo/bin"
+    "$HOME/.local/bin"
+    "$HOME/.bun/bin"
+  ];
 
   programs.zsh = {
     enable = true;
 
     # For interactive shells only
     initContent = ''
-      export DOCKER_HOST=unix:///var/run/docker.sock
-      export SCRIPTS_DIR="$HOME/.scripts"
-      export PATH="$HOME/go/bin:$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
-      export BUN_INSTALL="$HOME/.bun"
-      export PATH="$HOME/.local/bin:$BUN_INSTALL/bin:$PATH"
+      typeset -g ZSH_COMPLETION_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions"
+      mkdir -p "$ZSH_COMPLETION_CACHE_DIR"
+      fpath=("$ZSH_COMPLETION_CACHE_DIR" $fpath)
 
       # Source custom functions
       source "$HOME/.scripts/helper_funcs/nslookup_k8s.sh"
@@ -226,14 +233,25 @@
       zstyle :prompt:pure:virtualenv color '#FFFF99'
       zstyle :prompt:pure:continuation color '#FFFF99'
 
-      # Completions
-      source <(cobra-cli completion zsh)
-      source <(kubectl completion zsh)
-      source <(helm completion zsh)
-      source <(infractl completion zsh)
-      
-      # run ssh-agent in background
-      eval "$(ssh-agent -s)"
+      ensure_cached_completion() {
+        local command_name="$1"
+        local cache_name="$2"
+        shift 2
+
+        (( $+commands[$command_name] )) || return 0
+
+        if [[ -r "$ZSH_COMPLETION_CACHE_DIR/$cache_name" ]]; then
+          "$@" >| "$ZSH_COMPLETION_CACHE_DIR/$cache_name" 2>/dev/null &|
+        else
+          "$@" >| "$ZSH_COMPLETION_CACHE_DIR/$cache_name" 2>/dev/null
+        fi
+      }
+
+      ensure_cached_completion cobra-cli _cobra-cli cobra-cli completion zsh
+      ensure_cached_completion kubectl _kubectl kubectl completion zsh
+      ensure_cached_completion helm _helm helm completion zsh
+      ensure_cached_completion infractl _infractl infractl completion zsh
+
       bindkey -e
     '';
 
@@ -254,10 +272,13 @@
       kube-get-dockerinfo = "kube_get_dockerinfo";
       kube-tls-extract = "kube_tls_extract";
     };
-};
+    syntaxHighlighting = {
+      enable = true;
+      highlighters = [ "main" ];
+    };
+  };
 
-services.ssh-agent.enable = true;
-programs.zsh.syntaxHighlighting.enable = true;
+  services.ssh-agent.enable = true;
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
