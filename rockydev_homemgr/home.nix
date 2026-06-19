@@ -195,7 +195,7 @@
 
     # For interactive shells only
     initContent = ''
-      typeset -g ZSH_COMPLETION_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions"
+      typeset -g ZSH_COMPLETION_CACHE_DIR="''${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions"
       mkdir -p "$ZSH_COMPLETION_CACHE_DIR"
       fpath=("$ZSH_COMPLETION_CACHE_DIR" $fpath)
 
